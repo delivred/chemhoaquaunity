@@ -171,6 +171,7 @@ public class UIManager : MonoBehaviour
 
         if (combo > 1)
         {
+            comboText.color = Color.white;
             comboText.gameObject.SetActive(true);
             comboText.text = $"COMBO x{combo}!";
 
@@ -180,6 +181,42 @@ public class UIManager : MonoBehaviour
         else
         {
             comboText.gameObject.SetActive(false);
+        }
+    }
+
+    /// <summary>Hiển thị hiệu ứng thông báo khi chém quả đặc biệt (Hoàng Kim, Băng Giá).</summary>
+    public void ShowSpecialNotice(string message, Color color)
+    {
+        if (comboText == null) return;
+        comboText.color = color;
+        comboText.text = message;
+        comboText.gameObject.SetActive(true);
+
+        if (comboAnimCoroutine != null) StopCoroutine(comboAnimCoroutine);
+        comboAnimCoroutine = StartCoroutine(SpecialNoticeRoutine());
+    }
+
+    private IEnumerator SpecialNoticeRoutine()
+    {
+        if (comboText == null) yield break;
+        Transform t = comboText.transform;
+        t.localScale = initialComboScale * 1.5f;
+
+        float dur = 0.25f;
+        float e = 0f;
+        while (e < dur)
+        {
+            e += Time.unscaledDeltaTime;
+            t.localScale = Vector3.Lerp(initialComboScale * 1.5f, initialComboScale, e / dur);
+            yield return null;
+        }
+        t.localScale = initialComboScale;
+
+        yield return new WaitForSecondsRealtime(1.0f);
+        if (comboText != null && !comboText.text.StartsWith("COMBO"))
+        {
+            comboText.gameObject.SetActive(false);
+            comboText.color = Color.white;
         }
     }
 

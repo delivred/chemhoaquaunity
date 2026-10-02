@@ -15,8 +15,10 @@ public class Fruit : MonoBehaviour
     public int basePoints = 10;
 
     [Header("Hiệu ứng khi chém")]
-    public GameObject sliceEffectPrefab;   // particle bắn nước ép
-    public GameObject slicedHalfPrefab;    // prefab 2 nửa trái cây (dùng FruitHalf.cs)
+    public GameObject sliceEffectPrefab;       // particle bắn nước ép
+    public GameObject slicedHalfPrefab;        // prefab 2 nửa trái cây chung (fallback)
+    public GameObject slicedHalfPrefabLeft;    // nửa trái riêng biệt
+    public GameObject slicedHalfPrefabRight;   // nửa phải riêng biệt
     public AudioClip sliceSound;
 
     [Header("Trạng thái")]
@@ -45,15 +47,20 @@ public class Fruit : MonoBehaviour
 
         // Cộng điểm theo loại trái cây
         int points = basePoints;
-        if (fruitType == FruitType.Golden) points *= 2;
-
-        ScoreManager.Instance.AddSliceScore(points);
-
-        // Hiệu ứng đặc biệt
-        if (fruitType == FruitType.Freeze)
+        if (fruitType == FruitType.Golden)
         {
-            GameManager.Instance.ActivateSlowMotion(0.3f, 2.5f);
+            points *= 2;
+            UIManager.Instance?.ShowSpecialNotice("★ GOLDEN BONUS! ★", new Color(1f, 0.85f, 0.1f));
+            Camera.main?.SendMessage("Shake", 0.16f, SendMessageOptions.DontRequireReceiver);
         }
+        else if (fruitType == FruitType.Freeze)
+        {
+            GameManager.Instance?.ActivateSlowMotion(0.3f, 2.5f);
+            UIManager.Instance?.ShowSpecialNotice("❄️ FREEZE SLOW MOTION! ❄️", new Color(0.35f, 0.9f, 1f));
+            Camera.main?.SendMessage("Shake", 0.12f, SendMessageOptions.DontRequireReceiver);
+        }
+
+        ScoreManager.Instance?.AddSliceScore(points);
 
         // Spawn particle nước ép tại điểm chém
         if (sliceEffectPrefab != null)
@@ -69,10 +76,10 @@ public class Fruit : MonoBehaviour
         }
 
         // Tạo 2 nửa trái cây văng ra theo hướng chém
-        if (slicedHalfPrefab != null)
+        if (slicedHalfPrefab != null || slicedHalfPrefabLeft != null || slicedHalfPrefabRight != null)
         {
-            SpawnHalf(sliceDirection, 1);
             SpawnHalf(sliceDirection, -1);
+            SpawnHalf(sliceDirection, 1);
         }
 
         // Ẩn/hủy quả gốc
@@ -82,7 +89,13 @@ public class Fruit : MonoBehaviour
 
     private void SpawnHalf(Vector2 sliceDirection, int side)
     {
-        GameObject half = Instantiate(slicedHalfPrefab, transform.position, transform.rotation);
+        GameObject prefabToUse = slicedHalfPrefab;
+        if (side < 0 && slicedHalfPrefabLeft != null) prefabToUse = slicedHalfPrefabLeft;
+        else if (side > 0 && slicedHalfPrefabRight != null) prefabToUse = slicedHalfPrefabRight;
+
+        if (prefabToUse == null) return;
+
+        GameObject half = Instantiate(prefabToUse, transform.position, transform.rotation);
         Rigidbody2D halfRb = half.GetComponent<Rigidbody2D>();
 
         // Hướng văng ra vuông góc với hướng chém

@@ -170,7 +170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4965d77da794a440bbc6e954de3e477, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Fruit
-  fruitType: 2
+  fruitType: 0
   basePoints: 10
   sliceEffectPrefab: {fileID: 0}
   slicedHalfPrefab: {fileID: 0}
