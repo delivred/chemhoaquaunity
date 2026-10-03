@@ -174,5 +174,7 @@ MonoBehaviour:
   basePoints: 10
   sliceEffectPrefab: {fileID: 0}
   slicedHalfPrefab: {fileID: 0}
+  slicedHalfPrefabLeft: {fileID: 1000000000000000001, guid: fa2c1dc3163f4e76ad017c41413713d2, type: 3}
+  slicedHalfPrefabRight: {fileID: 1000000000000000001, guid: 10e022eea5f04f4985e1a2f116c6da55, type: 3}
   sliceSound: {fileID: 0}
   countsAsMissIfMissed: 1
