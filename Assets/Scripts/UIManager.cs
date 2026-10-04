@@ -22,6 +22,8 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI comboText;
     public Transform livesContainer;      // chứa các icon trái tim
     public GameObject heartIconPrefab;    // prefab icon 1 mạng
+    public Sprite heartFullSprite;        // icon trái tim đầy
+    public Sprite heartEmptySprite;       // icon trái tim vỡ/trống
 
     [Header("Game Over Elements")]
     public TextMeshProUGUI finalScoreText;
@@ -40,6 +42,7 @@ public class UIManager : MonoBehaviour
     private Coroutine scoreCountCoroutine;
     private Vector3 initialScoreScale = Vector3.one;
     private Vector3 initialComboScale = Vector3.one;
+    private int lastKnownLives = -1;
 
     private const string HIGH_SCORE_KEY = "FruitNinja_HighScore";
 
@@ -263,6 +266,16 @@ public class UIManager : MonoBehaviour
             heartIconPrefab = Resources.Load<GameObject>("Prefabs/HeartIcon");
         }
 
+        // Tự động gán sprite trái tim đầy từ prefab nếu chưa gán
+        if (heartFullSprite == null && heartIconPrefab != null)
+        {
+            Image prefabImg = heartIconPrefab.GetComponent<Image>();
+            if (prefabImg != null && prefabImg.sprite != null)
+            {
+                heartFullSprite = prefabImg.sprite;
+            }
+        }
+
         heartIcons = new GameObject[lives];
         for (int i = 0; i < lives; i++)
         {
@@ -279,7 +292,21 @@ public class UIManager : MonoBehaviour
                 rt.sizeDelta = new Vector2(64, 64);
                 heartIcons[i] = h;
             }
+
+            if (heartIcons[i] != null)
+            {
+                heartIcons[i].transform.localScale = Vector3.one;
+                Image img = heartIcons[i].GetComponent<Image>();
+                if (img != null && heartFullSprite != null)
+                {
+                    img.sprite = heartFullSprite;
+                    img.color = Color.white;
+                }
+            }
         }
+
+        lastKnownLives = lives;
+        UpdateLives(lives);
     }
 
     public void UpdateLives(int lives)
@@ -290,17 +317,68 @@ public class UIManager : MonoBehaviour
         {
             if (heartIcons[i] != null)
             {
-                // Khi mất mạng, làm mờ đi hoặc ẩn
                 Image img = heartIcons[i].GetComponent<Image>();
                 if (img != null)
                 {
-                    img.color = i < lives ? Color.white : new Color(0.3f, 0.3f, 0.3f, 0.4f);
+                    if (i < lives)
+                    {
+                        if (heartFullSprite != null) img.sprite = heartFullSprite;
+                        img.color = Color.white;
+                    }
+                    else
+                    {
+                        if (heartEmptySprite != null)
+                        {
+                            img.sprite = heartEmptySprite;
+                            img.color = Color.white;
+                        }
+                        else
+                        {
+                            img.color = new Color(0.3f, 0.3f, 0.3f, 0.4f);
+                        }
+                    }
                 }
                 else
                 {
                     heartIcons[i].SetActive(i < lives);
                 }
             }
+        }
+
+        // Hiệu ứng giật nảy tim và hiển thị cảnh báo đỏ khi bị mất mạng do bom
+        if (lastKnownLives > lives && lives >= 0 && lives < heartIcons.Length)
+        {
+            if (heartIcons[lives] != null)
+            {
+                StartCoroutine(PunchHeartLostRoutine(heartIcons[lives]));
+            }
+            ShowSpecialNotice("💥 BOMB! -1 ❤️ 💥", new Color(1f, 0.25f, 0.2f));
+        }
+
+        lastKnownLives = lives;
+    }
+
+    private IEnumerator PunchHeartLostRoutine(GameObject heartObj)
+    {
+        if (heartObj == null) yield break;
+        Transform t = heartObj.transform;
+        Vector3 baseScale = Vector3.one;
+
+        float dur = 0.35f;
+        float e = 0f;
+        while (e < dur)
+        {
+            if (heartObj == null) yield break;
+            e += Time.unscaledDeltaTime;
+            float progress = e / dur;
+            float scale = Mathf.Lerp(1.5f, 1.0f, progress);
+            t.localScale = baseScale * scale;
+            yield return null;
+        }
+
+        if (heartObj != null)
+        {
+            t.localScale = baseScale;
         }
     }
 

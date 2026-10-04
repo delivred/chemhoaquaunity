@@ -172,4 +172,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Bomb
   explosionEffectPrefab: {fileID: 0}
   explosionSound: {fileID: 0}
-  instantGameOver: 1
+  instantGameOver: 0

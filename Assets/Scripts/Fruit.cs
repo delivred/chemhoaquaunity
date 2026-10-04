@@ -135,8 +135,11 @@ public class Fruit : MonoBehaviour
         if (isSliced) return;
         if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameManager.GameState.Playing) return;
 
-        // Chỉ trừ mạng nếu quả rơi xuống dưới (không tính khi bay ra 2 bên lúc mới spawn)
-        if (transform.position.y < -6f && countsAsMissIfMissed)
+        // Reset chuỗi combo khi để rơi quả
+        ScoreManager.Instance?.ResetCombo();
+
+        // Chỉ trừ mạng nếu được bật cấu hình và quả rơi xuống dưới đáy
+        if (GameManager.Instance.loseLifeOnMissFruit && transform.position.y < -6f && countsAsMissIfMissed)
         {
             GameManager.Instance.LoseLife();
         }

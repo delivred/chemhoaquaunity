@@ -14,7 +14,7 @@ public class Bomb : MonoBehaviour
 
     [Header("Cấu hình")]
     [Tooltip("Nếu bật, chém trúng bom sẽ thua ngay lập tức thay vì chỉ trừ 1 mạng")]
-    public bool instantGameOver = true;
+    public bool instantGameOver = false;
 
     private bool isTriggered = false;
     private Rigidbody2D rb;

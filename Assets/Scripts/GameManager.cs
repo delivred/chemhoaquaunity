@@ -15,6 +15,8 @@ public class GameManager : MonoBehaviour
     [Header("Cấu hình mạng sống")]
     public int startingLives = 3;
     public int CurrentLives { get; private set; }
+    [Tooltip("Nếu bật, để rơi trái cây cũng sẽ bị trừ mạng. Nếu tắt, chỉ chém trúng bom mới bị trừ mạng.")]
+    public bool loseLifeOnMissFruit = false;
 
     [Header("Cấu hình tăng độ khó")]
     public float difficultyIncreaseInterval = 10f; // sau bao nhiêu giây thì tăng độ khó

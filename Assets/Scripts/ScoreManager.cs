@@ -34,6 +34,14 @@ public class ScoreManager : MonoBehaviour
         UIManager.Instance.UpdateCombo(0);
     }
 
+    /// <summary>Đặt lại chuỗi combo về 0 khi người chơi để rơi quả hoặc hết thời gian.</summary>
+    public void ResetCombo()
+    {
+        ComboCount = 0;
+        lastSliceTime = -999f;
+        UIManager.Instance?.UpdateCombo(0);
+    }
+
     /// <summary>Gọi mỗi khi một quả bị chém trúng.</summary>
     public void AddSliceScore(int basePoints)
     {

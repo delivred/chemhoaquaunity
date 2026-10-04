@@ -682,6 +682,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   startingLives: 3
+  loseLifeOnMissFruit: 0
   difficultyIncreaseInterval: 10
   difficultyMultiplier: 1.15
   currentDifficultyFactor: 1
@@ -1699,6 +1700,8 @@ MonoBehaviour:
   comboText: {fileID: 193788776}
   livesContainer: {fileID: 1016203443}
   heartIconPrefab: {fileID: 5100000000000000001, guid: 60000000000000000000000000000001, type: 3}
+  heartFullSprite: {fileID: 21300000, guid: 70000000000000000000000000000009, type: 3}
+  heartEmptySprite: {fileID: 21300000, guid: 8cea2973c9794b218a8c36b4ea703557, type: 3}
   finalScoreText: {fileID: 1995930675}
   highScoreText: {fileID: 577641644}
   floatingScorePrefab: {fileID: 0}
