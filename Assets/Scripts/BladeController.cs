@@ -87,12 +87,22 @@ public class BladeController : MonoBehaviour
         }
     }
 
+    private Vector2 GetWorldPosition(Vector2 screenPos)
+    {
+        if (mainCamera == null) mainCamera = Camera.main;
+        if (mainCamera == null) return screenPos;
+        // Đảm bảo lấy đúng tọa độ trên mặt phẳng Z = 0
+        float distanceToPlane = -mainCamera.transform.position.z;
+        Vector3 wp = mainCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, distanceToPlane));
+        return new Vector2(wp.x, wp.y);
+    }
+
     private void StartStroke(Vector2 screenPos)
     {
         isSlicing = true;
         hitThisStroke.Clear();
-        previousWorldPos = mainCamera.ScreenToWorldPoint(screenPos);
-        transform.position = previousWorldPos;
+        previousWorldPos = GetWorldPosition(screenPos);
+        transform.position = new Vector3(previousWorldPos.x, previousWorldPos.y, 0f);
         if (trail != null)
         {
             trail.Clear();
@@ -102,15 +112,27 @@ public class BladeController : MonoBehaviour
 
     private void ContinueStroke(Vector2 screenPos)
     {
-        currentWorldPos = mainCamera.ScreenToWorldPoint(screenPos);
-        transform.position = currentWorldPos;
+        currentWorldPos = GetWorldPosition(screenPos);
 
         float distance = Vector2.Distance(previousWorldPos, currentWorldPos);
-        float velocity = distance / Time.deltaTime;
+        float dt = Mathf.Max(0.001f, Time.deltaTime);
+        float velocity = distance / dt;
 
-        if (velocity >= minSliceVelocity)
+        // Nội suy mượt (sub-stepping) để vệt chém uốn lượn mềm mại khi vung chuột nhanh
+        int steps = Mathf.Max(1, Mathf.CeilToInt(distance / 0.15f));
+        Vector2 stepFrom = previousWorldPos;
+
+        for (int i = 1; i <= steps; i++)
         {
-            CheckSliceAlongPath(previousWorldPos, currentWorldPos);
+            float t = (float)i / steps;
+            Vector2 stepTo = Vector2.Lerp(previousWorldPos, currentWorldPos, t);
+            transform.position = new Vector3(stepTo.x, stepTo.y, 0f);
+
+            if (velocity >= minSliceVelocity)
+            {
+                CheckSliceAlongPath(stepFrom, stepTo);
+            }
+            stepFrom = stepTo;
         }
 
         previousWorldPos = currentWorldPos;
