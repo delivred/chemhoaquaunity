@@ -34,13 +34,13 @@ public class Bomb : MonoBehaviour
         fuseSparkObj = new GameObject("FuseSpark");
         fuseSparkObj.transform.SetParent(transform, false);
         // Vị trí đầu ngòi nổ (góc trên bên phải quả bom)
-        fuseSparkObj.transform.localPosition = new Vector3(0.68f, 1.12f, 0f);
+        fuseSparkObj.transform.localPosition = new Vector3(1.35f, 2.05f, 0f);
 
         fuseSparkSr = fuseSparkObj.AddComponent<SpriteRenderer>();
         fuseSparkSr.sprite = Resources.Load<Sprite>("blade_gleam") ?? Resources.Load<Sprite>("Sprites/blade_gleam");
         fuseSparkSr.color = new Color(1f, 0.85f, 0.2f, 1f);
         fuseSparkSr.sortingOrder = 10;
-        fuseSparkObj.transform.localScale = Vector3.one * 0.35f;
+        fuseSparkObj.transform.localScale = Vector3.one * 0.45f;
     }
 
     void Update()
@@ -49,7 +49,7 @@ public class Bomb : MonoBehaviour
         {
             // Hiệu ứng ngọn lửa ngòi nổ cháy xèo xèo lập lòe
             float pulse = Mathf.PingPong(Time.time * 14f, 1f);
-            fuseSparkObj.transform.localScale = Vector3.one * Mathf.Lerp(0.25f, 0.48f, pulse);
+            fuseSparkObj.transform.localScale = Vector3.one * Mathf.Lerp(0.35f, 0.60f, pulse);
             fuseSparkSr.color = Color.Lerp(new Color(1f, 0.45f, 0.1f, 1f), new Color(1f, 0.95f, 0.35f, 1f), pulse);
         }
     }
