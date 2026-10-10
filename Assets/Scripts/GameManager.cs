@@ -12,6 +12,12 @@ public class GameManager : MonoBehaviour
     public enum GameState { Menu, Playing, Paused, GameOver }
     public GameState CurrentState { get; private set; } = GameState.Menu;
 
+    public enum GameDifficulty { Easy, Normal, Hard }
+    public GameDifficulty CurrentDifficulty { get; private set; } = GameDifficulty.Normal;
+
+    private static GameDifficulty lastDifficulty = GameDifficulty.Normal;
+    private static bool autoRestart = false;
+
     [Header("Cấu hình mạng sống")]
     public int startingLives = 3;
     public int CurrentLives { get; private set; }
@@ -36,6 +42,15 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
 
+    void Start()
+    {
+        if (autoRestart)
+        {
+            autoRestart = false;
+            StartGame(lastDifficulty);
+        }
+    }
+
     void Update()
     {
         if (CurrentState != GameState.Playing) return;
@@ -49,26 +64,61 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>Gọi khi người chơi bấm nút Play trên Menu.</summary>
-    public void StartGame()
+    /// <summary>Bắt đầu game với chế độ được chỉ định: Dễ, Thường hoặc Khó.</summary>
+    public void StartGame(GameDifficulty difficulty)
     {
+        CurrentDifficulty = difficulty;
+        lastDifficulty = difficulty;
+
+        // Cấu hình quy tắc & độ thử thách theo từng chế độ
+        switch (difficulty)
+        {
+            case GameDifficulty.Easy:
+                startingLives = 5;              // 5 mạng, thoải mái trải nghiệm
+                loseLifeOnMissFruit = false;    // Rơi quả không bị phạt
+                difficultyIncreaseInterval = 15f;
+                difficultyMultiplier = 1.08f;
+                break;
+
+            case GameDifficulty.Normal:
+                startingLives = 3;              // 3 mạng chuẩn arcade
+                loseLifeOnMissFruit = false;    // Chỉ bom mới trừ mạng
+                difficultyIncreaseInterval = 10f;
+                difficultyMultiplier = 1.15f;
+                break;
+
+            case GameDifficulty.Hard:
+                startingLives = 3;              // 3 mạng
+                loseLifeOnMissFruit = true;     // RƠI QUẢ CŨNG BỊ TRỪ MẠNG (Chuẩn Fruit Ninja Classic!)
+                difficultyIncreaseInterval = 8f;
+                difficultyMultiplier = 1.20f;
+                break;
+        }
+
         CurrentLives = startingLives;
         currentDifficultyFactor = 1f;
         difficultyTimer = 0f;
         CurrentState = GameState.Playing;
         Time.timeScale = 1f;
 
-        ScoreManager.Instance.ResetScore();
-        UIManager.Instance.ShowGameplayUI();
+        FruitSpawner.Instance?.ApplyDifficulty(difficulty);
+        ScoreManager.Instance?.ResetScore();
+        UIManager.Instance?.ShowGameplayUI(difficulty);
     }
 
-    /// <summary>Người chơi chém trúng bom hoặc để rơi quá nhiều trái cây.</summary>
-    public void LoseLife()
+    /// <summary>Gọi khi bấm Play mặc định (chơi lại chế độ gần nhất hoặc Normal).</summary>
+    public void StartGame()
+    {
+        StartGame(lastDifficulty);
+    }
+
+    /// <summary>Người chơi chém trúng bom hoặc để rơi trái cây (trong chế độ Khó).</summary>
+    public void LoseLife(bool isBomb = true)
     {
         if (CurrentState != GameState.Playing) return;
 
         CurrentLives--;
-        UIManager.Instance.UpdateLives(CurrentLives);
+        UIManager.Instance?.UpdateLives(CurrentLives, isBomb);
 
         if (CurrentLives <= 0)
         {
@@ -79,7 +129,7 @@ public class GameManager : MonoBehaviour
     public void EndGame()
     {
         CurrentState = GameState.GameOver;
-        UIManager.Instance.ShowGameOver(ScoreManager.Instance.CurrentScore);
+        UIManager.Instance?.ShowGameOver(ScoreManager.Instance.CurrentScore, CurrentDifficulty);
     }
 
     public void PauseGame()
@@ -87,7 +137,7 @@ public class GameManager : MonoBehaviour
         if (CurrentState != GameState.Playing) return;
         CurrentState = GameState.Paused;
         Time.timeScale = 0f;
-        UIManager.Instance.ShowPausePanel(true);
+        UIManager.Instance?.ShowPausePanel(true);
     }
 
     public void ResumeGame()
@@ -95,20 +145,22 @@ public class GameManager : MonoBehaviour
         if (CurrentState != GameState.Paused) return;
         CurrentState = GameState.Playing;
         Time.timeScale = 1f;
-        UIManager.Instance.ShowPausePanel(false);
+        UIManager.Instance?.ShowPausePanel(false);
     }
 
     public void RestartGame()
     {
+        autoRestart = true;
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void GoToMenu()
     {
+        autoRestart = false;
         CurrentState = GameState.Menu;
         Time.timeScale = 1f;
-        UIManager.Instance.ShowMainMenu();
+        UIManager.Instance?.ShowMainMenu();
     }
 
     /// <summary>Dùng cho hiệu ứng chém trúng trái cây đá làm chậm thời gian.</summary>

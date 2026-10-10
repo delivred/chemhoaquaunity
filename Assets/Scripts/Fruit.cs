@@ -138,10 +138,10 @@ public class Fruit : MonoBehaviour
         // Reset chuỗi combo khi để rơi quả
         ScoreManager.Instance?.ResetCombo();
 
-        // Chỉ trừ mạng nếu được bật cấu hình và quả rơi xuống dưới đáy
+        // Chỉ trừ mạng nếu được bật cấu hình và quả rơi xuống dưới đáy (Chế độ Khó)
         if (GameManager.Instance.loseLifeOnMissFruit && transform.position.y < -6f && countsAsMissIfMissed)
         {
-            GameManager.Instance.LoseLife();
+            GameManager.Instance.LoseLife(false);
         }
 
         Destroy(gameObject);

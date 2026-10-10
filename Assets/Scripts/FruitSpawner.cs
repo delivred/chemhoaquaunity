@@ -39,9 +39,72 @@ public class FruitSpawner : MonoBehaviour
     public int minBurst = 1;
     public int maxBurst = 3;
 
+    public static FruitSpawner Instance { get; private set; }
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
     void Start()
     {
         StartCoroutine(SpawnLoop());
+    }
+
+    /// <summary>
+    /// Điều chỉnh thông số sinh trái cây và bom theo chế độ chơi: Dễ, Thường, Khó.
+    /// </summary>
+    public void ApplyDifficulty(GameManager.GameDifficulty difficulty)
+    {
+        switch (difficulty)
+        {
+            case GameManager.GameDifficulty.Easy:
+                bombChance = 0.05f;           // Rất ít bom (5%)
+                goldenChance = 0.08f;         // Tăng cơ hội quả hoàng kim
+                freezeChance = 0.08f;         // Tăng cơ hội quả đóng băng
+                minSpawnInterval = 0.6f;      // Bay thư thả
+                maxSpawnInterval = 1.35f;
+                minBurst = 1;
+                maxBurst = 2;                 // Mỗi đợt 1 - 2 quả
+                minForceX = -1.8f;
+                maxForceX = 1.8f;
+                minForceY = 11f;              // Lực bay vừa phải, dễ chém
+                maxForceY = 14.5f;
+                break;
+
+            case GameManager.GameDifficulty.Normal:
+                bombChance = 0.12f;           // 12% bom - chuẩn arcade
+                goldenChance = 0.05f;
+                freezeChance = 0.05f;
+                minSpawnInterval = 0.4f;
+                maxSpawnInterval = 1.1f;
+                minBurst = 1;
+                maxBurst = 3;                 // Mỗi đợt 1 - 3 quả
+                minForceX = -2f;
+                maxForceX = 2f;
+                minForceY = 12f;
+                maxForceY = 16f;
+                break;
+
+            case GameManager.GameDifficulty.Hard:
+                bombChance = 0.22f;           // 22% bom - bom bay dày đặc
+                goldenChance = 0.04f;
+                freezeChance = 0.04f;
+                minSpawnInterval = 0.22f;     // Tốc độ bắn cực nhanh, liên tục
+                maxSpawnInterval = 0.70f;
+                minBurst = 2;
+                maxBurst = 4;                 // Mỗi đợt 2 - 4 quả dồn dập
+                minForceX = -2.8f;            // Quỹ đạo bay rộng, chéo góc
+                maxForceX = 2.8f;
+                minForceY = 13.5f;            // Lực bắn mạnh, quả bay vút
+                maxForceY = 17.5f;
+                break;
+        }
     }
 
     private IEnumerator SpawnLoop()

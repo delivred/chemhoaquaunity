@@ -30,6 +30,10 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI highScoreText;
     public TextMeshProUGUI newRecordBadge; // huy hiệu "KỶ LỤC MỚI!" (tùy chọn)
 
+    [Header("Difficulty HUD & Menu Elements")]
+    public TextMeshProUGUI difficultyBadgeHUD;      // Huy hiệu chế độ trên GameplayHUD
+    public TextMeshProUGUI gameOverDifficultyText;   // Text hiển thị chế độ trên GameOverPanel
+
     [Header("Main Menu Elements (Tùy chọn)")]
     public TextMeshProUGUI menuHighScoreText;
 
@@ -67,14 +71,17 @@ public class UIManager : MonoBehaviour
         SetActiveSafe(pausePanel, false);
         SetActiveSafe(gameOverPanel, false);
 
-        int highScore = PlayerPrefs.GetInt(HIGH_SCORE_KEY, 0);
+        int bestEasy = GetHighScore(GameManager.GameDifficulty.Easy);
+        int bestNorm = GetHighScore(GameManager.GameDifficulty.Normal);
+        int bestHard = GetHighScore(GameManager.GameDifficulty.Hard);
+
         if (menuHighScoreText != null)
         {
-            menuHighScoreText.text = $"★ BEST: {highScore}";
+            menuHighScoreText.text = $"★ KỶ LỤC: DỄ {bestEasy}  |  THƯỜNG {bestNorm}  |  KHÓ {bestHard}";
         }
     }
 
-    public void ShowGameplayUI()
+    public void ShowGameplayUI(GameManager.GameDifficulty difficulty)
     {
         SetActiveSafe(mainMenuPanel, false);
         SetActiveSafe(gameplayHUD, true);
@@ -84,6 +91,40 @@ public class UIManager : MonoBehaviour
         SetupLivesUI(GameManager.Instance != null ? GameManager.Instance.startingLives : 3);
         UpdateScore(0);
         UpdateCombo(0);
+        UpdateDifficultyBadge(difficulty);
+    }
+
+    public void ShowGameplayUI()
+    {
+        ShowGameplayUI(GameManager.Instance != null ? GameManager.Instance.CurrentDifficulty : GameManager.GameDifficulty.Normal);
+    }
+
+    private void UpdateDifficultyBadge(GameManager.GameDifficulty difficulty)
+    {
+        if (difficultyBadgeHUD == null && gameplayHUD != null)
+        {
+            Transform t = gameplayHUD.transform.Find("DifficultyBadge");
+            if (t != null) difficultyBadgeHUD = t.GetComponent<TextMeshProUGUI>();
+        }
+
+        if (difficultyBadgeHUD != null)
+        {
+            switch (difficulty)
+            {
+                case GameManager.GameDifficulty.Easy:
+                    difficultyBadgeHUD.text = "🟢 DỄ";
+                    difficultyBadgeHUD.color = new Color(0.35f, 1f, 0.45f);
+                    break;
+                case GameManager.GameDifficulty.Normal:
+                    difficultyBadgeHUD.text = "🟡 THƯỜNG";
+                    difficultyBadgeHUD.color = new Color(1f, 0.75f, 0.2f);
+                    break;
+                case GameManager.GameDifficulty.Hard:
+                    difficultyBadgeHUD.text = "🔴 KHÓ (x1.5 ĐIỂM)";
+                    difficultyBadgeHUD.color = new Color(1f, 0.35f, 0.35f);
+                    break;
+            }
+        }
     }
 
     public void ShowPausePanel(bool show)
@@ -91,20 +132,31 @@ public class UIManager : MonoBehaviour
         SetActiveSafe(pausePanel, show);
     }
 
-    public void ShowGameOver(int finalScore)
+    public void ShowGameOver(int finalScore, GameManager.GameDifficulty difficulty)
     {
         SetActiveSafe(gameplayHUD, false);
         SetActiveSafe(gameOverPanel, true);
 
-        int oldHighScore = PlayerPrefs.GetInt(HIGH_SCORE_KEY, 0);
+        if (gameOverDifficultyText == null && gameOverPanel != null)
+        {
+            Transform t = gameOverPanel.transform.Find("GameOverDifficultyText");
+            if (t != null) gameOverDifficultyText = t.GetComponent<TextMeshProUGUI>();
+        }
+
+        if (gameOverDifficultyText != null)
+        {
+            gameOverDifficultyText.text = $"CHẾ ĐỘ: {GetDifficultyName(difficulty)}";
+            gameOverDifficultyText.color = GetDifficultyColor(difficulty);
+        }
+
+        int oldHighScore = GetHighScore(difficulty);
         bool isNewRecord = finalScore > oldHighScore;
         int displayHighScore = oldHighScore;
 
         if (isNewRecord)
         {
             displayHighScore = finalScore;
-            PlayerPrefs.SetInt(HIGH_SCORE_KEY, finalScore);
-            PlayerPrefs.Save();
+            SaveHighScore(difficulty, finalScore);
         }
 
         if (newRecordBadge != null)
@@ -120,6 +172,11 @@ public class UIManager : MonoBehaviour
         // Hiệu ứng tăng điểm từ 0 -> finalScore
         if (scoreCountCoroutine != null) StopCoroutine(scoreCountCoroutine);
         scoreCountCoroutine = StartCoroutine(AnimateScoreCount(finalScore));
+    }
+
+    public void ShowGameOver(int finalScore)
+    {
+        ShowGameOver(finalScore, GameManager.Instance != null ? GameManager.Instance.CurrentDifficulty : GameManager.GameDifficulty.Normal);
     }
 
     private IEnumerator AnimateScoreCount(int targetScore)
@@ -309,7 +366,7 @@ public class UIManager : MonoBehaviour
         UpdateLives(lives);
     }
 
-    public void UpdateLives(int lives)
+    public void UpdateLives(int lives, bool isBomb)
     {
         if (heartIcons == null) return;
 
@@ -345,17 +402,30 @@ public class UIManager : MonoBehaviour
             }
         }
 
-        // Hiệu ứng giật nảy tim và hiển thị cảnh báo đỏ khi bị mất mạng do bom
+        // Hiệu ứng giật nảy tim và hiển thị cảnh báo khi bị mất mạng
         if (lastKnownLives > lives && lives >= 0 && lives < heartIcons.Length)
         {
             if (heartIcons[lives] != null)
             {
                 StartCoroutine(PunchHeartLostRoutine(heartIcons[lives]));
             }
-            ShowSpecialNotice("💥 BOMB! -1 ❤️ 💥", new Color(1f, 0.25f, 0.2f));
+
+            if (isBomb)
+            {
+                ShowSpecialNotice("💥 BOMB! -1 ❤️ 💥", new Color(1f, 0.25f, 0.2f));
+            }
+            else
+            {
+                ShowSpecialNotice("❌ RƠI QUẢ! -1 ❤️ ❌", new Color(1f, 0.45f, 0.2f));
+            }
         }
 
         lastKnownLives = lives;
+    }
+
+    public void UpdateLives(int lives)
+    {
+        UpdateLives(lives, true);
     }
 
     private IEnumerator PunchHeartLostRoutine(GameObject heartObj)
@@ -397,7 +467,66 @@ public class UIManager : MonoBehaviour
         if (obj != null) obj.SetActive(value);
     }
 
+    public static string GetDifficultyName(GameManager.GameDifficulty diff)
+    {
+        switch (diff)
+        {
+            case GameManager.GameDifficulty.Easy: return "DỄ (5 ❤️)";
+            case GameManager.GameDifficulty.Normal: return "THƯỜNG (3 ❤️)";
+            case GameManager.GameDifficulty.Hard: return "KHÓ (CHUYÊN NGHIỆP)";
+            default: return "THƯỜNG";
+        }
+    }
+
+    public static Color GetDifficultyColor(GameManager.GameDifficulty diff)
+    {
+        switch (diff)
+        {
+            case GameManager.GameDifficulty.Easy: return new Color(0.35f, 1f, 0.45f);
+            case GameManager.GameDifficulty.Normal: return new Color(1f, 0.75f, 0.2f);
+            case GameManager.GameDifficulty.Hard: return new Color(1f, 0.35f, 0.35f);
+            default: return Color.white;
+        }
+    }
+
+    public static string GetHighScoreKey(GameManager.GameDifficulty diff)
+    {
+        return $"{HIGH_SCORE_KEY}_{diff}";
+    }
+
+    public static int GetHighScore(GameManager.GameDifficulty diff)
+    {
+        string key = GetHighScoreKey(diff);
+        int val = PlayerPrefs.GetInt(key, -1);
+        if (val < 0)
+        {
+            if (diff == GameManager.GameDifficulty.Normal)
+            {
+                val = PlayerPrefs.GetInt(HIGH_SCORE_KEY, 0);
+                PlayerPrefs.SetInt(key, val);
+            }
+            else
+            {
+                val = 0;
+            }
+        }
+        return val;
+    }
+
+    public static void SaveHighScore(GameManager.GameDifficulty diff, int score)
+    {
+        PlayerPrefs.SetInt(GetHighScoreKey(diff), score);
+        if (diff == GameManager.GameDifficulty.Normal)
+        {
+            PlayerPrefs.SetInt(HIGH_SCORE_KEY, score);
+        }
+        PlayerPrefs.Save();
+    }
+
     // --- Các hàm gọi từ Button OnClick() trong Inspector ---
+    public void OnClickPlayEasy() => GameManager.Instance.StartGame(GameManager.GameDifficulty.Easy);
+    public void OnClickPlayNormal() => GameManager.Instance.StartGame(GameManager.GameDifficulty.Normal);
+    public void OnClickPlayHard() => GameManager.Instance.StartGame(GameManager.GameDifficulty.Hard);
     public void OnClickPlay() => GameManager.Instance.StartGame();
     public void OnClickPause() => GameManager.Instance.PauseGame();
     public void OnClickResume() => GameManager.Instance.ResumeGame();

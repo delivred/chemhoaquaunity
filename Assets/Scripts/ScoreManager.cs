@@ -57,7 +57,12 @@ public class ScoreManager : MonoBehaviour
         lastSliceTime = Time.time;
 
         int bonus = (ComboCount - 1) * comboBonusPerExtra;
-        int totalPoints = basePoints + bonus;
+        float diffMult = 1f;
+        if (GameManager.Instance != null && GameManager.Instance.CurrentDifficulty == GameManager.GameDifficulty.Hard)
+        {
+            diffMult = 1.5f; // Chế độ Khó được thưởng x1.5 điểm
+        }
+        int totalPoints = Mathf.RoundToInt((basePoints + bonus) * diffMult);
 
         CurrentScore += totalPoints;
 
