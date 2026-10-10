@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
 
     private static GameDifficulty lastDifficulty = GameDifficulty.Normal;
     private static bool autoRestart = false;
+    private const string PREF_DIFFICULTY_KEY = "FruitNinja_SelectedDifficulty";
 
     [Header("Cấu hình mạng sống")]
     public int startingLives = 3;
@@ -40,6 +41,23 @@ public class GameManager : MonoBehaviour
             return;
         }
         Instance = this;
+
+        // Tải độ khó đã chọn trước đó (mặc định là Normal)
+        int savedDiff = PlayerPrefs.GetInt(PREF_DIFFICULTY_KEY, (int)GameDifficulty.Normal);
+        if (System.Enum.IsDefined(typeof(GameDifficulty), savedDiff))
+        {
+            CurrentDifficulty = (GameDifficulty)savedDiff;
+            lastDifficulty = CurrentDifficulty;
+        }
+    }
+
+    /// <summary>Thiết lập chế độ chơi đã chọn từ menu (lưu vào PlayerPrefs).</summary>
+    public void SetDifficulty(GameDifficulty difficulty)
+    {
+        CurrentDifficulty = difficulty;
+        lastDifficulty = difficulty;
+        PlayerPrefs.SetInt(PREF_DIFFICULTY_KEY, (int)difficulty);
+        PlayerPrefs.Save();
     }
 
     void Start()
@@ -69,6 +87,8 @@ public class GameManager : MonoBehaviour
     {
         CurrentDifficulty = difficulty;
         lastDifficulty = difficulty;
+        PlayerPrefs.SetInt(PREF_DIFFICULTY_KEY, (int)difficulty);
+        PlayerPrefs.Save();
 
         // Cấu hình quy tắc & độ thử thách theo từng chế độ
         switch (difficulty)

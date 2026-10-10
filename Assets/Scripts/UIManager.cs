@@ -33,6 +33,8 @@ public class UIManager : MonoBehaviour
     [Header("Difficulty HUD & Menu Elements")]
     public TextMeshProUGUI difficultyBadgeHUD;      // Huy hiệu chế độ trên GameplayHUD
     public TextMeshProUGUI gameOverDifficultyText;   // Text hiển thị chế độ trên GameOverPanel
+    public GameObject modeSelectPanel;              // Popup panel chọn chế độ
+    public TextMeshProUGUI modeSelectButtonText;    // Text trên nút "CHỌN CHẾ ĐỘ: ..."
 
     [Header("Main Menu Elements (Tùy chọn)")]
     public TextMeshProUGUI menuHighScoreText;
@@ -67,9 +69,12 @@ public class UIManager : MonoBehaviour
     public void ShowMainMenu()
     {
         SetActiveSafe(mainMenuPanel, true);
+        SetActiveSafe(modeSelectPanel, false);
         SetActiveSafe(gameplayHUD, false);
         SetActiveSafe(pausePanel, false);
         SetActiveSafe(gameOverPanel, false);
+
+        UpdateModeSelectButtonText();
 
         int bestEasy = GetHighScore(GameManager.GameDifficulty.Easy);
         int bestNorm = GetHighScore(GameManager.GameDifficulty.Normal);
@@ -78,6 +83,16 @@ public class UIManager : MonoBehaviour
         if (menuHighScoreText != null)
         {
             menuHighScoreText.text = $"★ KỶ LỤC: DỄ {bestEasy}  |  THƯỜNG {bestNorm}  |  KHÓ {bestHard}";
+        }
+    }
+
+    /// <summary>Cập nhật nhãn của nút chọn chế độ ở Menu chính (ví dụ: 'CHỌN CHẾ ĐỘ: THƯỜNG').</summary>
+    public void UpdateModeSelectButtonText()
+    {
+        if (modeSelectButtonText != null)
+        {
+            var diff = GameManager.Instance != null ? GameManager.Instance.CurrentDifficulty : GameManager.GameDifficulty.Normal;
+            modeSelectButtonText.text = $"CHỌN CHẾ ĐỘ: {GetDifficultyName(diff)}";
         }
     }
 
@@ -524,6 +539,30 @@ public class UIManager : MonoBehaviour
     }
 
     // --- Các hàm gọi từ Button OnClick() trong Inspector ---
+    public void OnClickOpenModeSelect()
+    {
+        SetActiveSafe(modeSelectPanel, true);
+    }
+
+    public void OnClickCloseModeSelect()
+    {
+        SetActiveSafe(modeSelectPanel, false);
+    }
+
+    public void OnSelectDifficulty(GameManager.GameDifficulty diff)
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetDifficulty(diff);
+        }
+        UpdateModeSelectButtonText();
+        SetActiveSafe(modeSelectPanel, false);
+    }
+
+    public void OnClickSelectEasy() => OnSelectDifficulty(GameManager.GameDifficulty.Easy);
+    public void OnClickSelectNormal() => OnSelectDifficulty(GameManager.GameDifficulty.Normal);
+    public void OnClickSelectHard() => OnSelectDifficulty(GameManager.GameDifficulty.Hard);
+
     public void OnClickPlayEasy() => GameManager.Instance.StartGame(GameManager.GameDifficulty.Easy);
     public void OnClickPlayNormal() => GameManager.Instance.StartGame(GameManager.GameDifficulty.Normal);
     public void OnClickPlayHard() => GameManager.Instance.StartGame(GameManager.GameDifficulty.Hard);
