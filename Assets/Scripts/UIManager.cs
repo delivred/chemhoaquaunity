@@ -112,15 +112,15 @@ public class UIManager : MonoBehaviour
             switch (difficulty)
             {
                 case GameManager.GameDifficulty.Easy:
-                    difficultyBadgeHUD.text = "🟢 DỄ";
+                    difficultyBadgeHUD.text = "DỄ";
                     difficultyBadgeHUD.color = new Color(0.35f, 1f, 0.45f);
                     break;
                 case GameManager.GameDifficulty.Normal:
-                    difficultyBadgeHUD.text = "🟡 THƯỜNG";
+                    difficultyBadgeHUD.text = "THƯỜNG";
                     difficultyBadgeHUD.color = new Color(1f, 0.75f, 0.2f);
                     break;
                 case GameManager.GameDifficulty.Hard:
-                    difficultyBadgeHUD.text = "🔴 KHÓ (x1.5 ĐIỂM)";
+                    difficultyBadgeHUD.text = "KHÓ";
                     difficultyBadgeHUD.color = new Color(1f, 0.35f, 0.35f);
                     break;
             }
@@ -471,9 +471,9 @@ public class UIManager : MonoBehaviour
     {
         switch (diff)
         {
-            case GameManager.GameDifficulty.Easy: return "DỄ (5 ❤️)";
-            case GameManager.GameDifficulty.Normal: return "THƯỜNG (3 ❤️)";
-            case GameManager.GameDifficulty.Hard: return "KHÓ (CHUYÊN NGHIỆP)";
+            case GameManager.GameDifficulty.Easy: return "DỄ";
+            case GameManager.GameDifficulty.Normal: return "THƯỜNG";
+            case GameManager.GameDifficulty.Hard: return "KHÓ";
             default: return "THƯỜNG";
         }
     }
